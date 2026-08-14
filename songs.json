@@ -1,0 +1,62 @@
+[
+ {
+  "slug": "50-special",
+  "title": "50 Special",
+  "subtitle": "Lunapop",
+  "key": "SOL",
+  "categories": [
+   "italiane"
+  ],
+  "body": "{title: 50 Special}\n{subtitle: Lunapop}\n{categories: italiane}\n{key: SOL}\n\n[SOL]Vespe truccate anni ses[LA7]santa\n[DO]girano in centro sfio[SOL]rando i novanta\n[SOL]rosse di fuoco comincia la [LA7]danza\ndue [DO]frecce con dietro attaccata una [SOL]targa\n\n{start_of_chorus}\n[DO]Dammi una special l'estate che a[RE]vanza\n[DO]dammi una vespa e ti porto in va[RE]canza\nMa [SOL]quant'è bello andare in [DO9]giro\ncon le [MIm]ali sotto ai [RE]piedi\n{end_of_chorus}\n"
+ },
+ {
+  "slug": "abbracciami",
+  "title": "Abbracciami",
+  "subtitle": "",
+  "key": "LA",
+  "categories": [
+   "preghiera"
+  ],
+  "body": "{title: Abbracciami}\n{categories: preghiera}\n{key: LA}\n\n[MI]Gesù parola viva e vera, [LA]sorgente che\n[DO#m]disseta e cura ogni [LA]ferita,\n[MI]ferma su di me i tuoi occhi, [LA]la tua mano\n[DO#m]stendi e donami la [LA]vita.\n\n{start_of_chorus}\nAbbracciami [MI]Dio dell'[SI]eternità,\n[DO#m]rifugio dell'anima, [LA]grazia che opera.\nRiscaldami [MI]fuoco che li[SI]bera,\n[DO#m]manda il tuo Spirito Mara[LA]nathà Gesù.\n{end_of_chorus}\n\n[MI]Gesù asciuga il nostro pianto, [LA]Leone\n[DO#m]vincitore della tribù di [LA]Giuda\n[MI]Vieni nella tua potenza, [LA]questo cuore\n[DO#m]sciogli con ogni sua [LA]paura.\n\n{chorus}\n\n{start_of_chorus: finale}\n[MI]Per sempre io can[SI]terò la tua im[DO#m]mensa fedel[LA]tà\n[MI]Il tuo spirito in [SI]me in e[DO#m]terno ti lode[LA]rà\nPer sempre io canterò la tua immensa fedeltà\nIl tuo spirito in me in eterno ti loderà\n{end_of_chorus}\n\n{chorus: finale}\n\n[MI]Abbracciami.\n"
+ },
+ {
+  "slug": "accogli-i-nostri-doni",
+  "title": "Accogli i nostri doni",
+  "subtitle": "",
+  "key": "DO",
+  "categories": [
+   "preghiera"
+  ],
+  "body": "{title: Accogli i nostri doni}\n{categories: preghiera}\n{key: DO}\n\n[DO]Accogli Signore i nostri doni\nin [LAm]questo misterioso in[DO]contro\n[FA]tra la nostra po[DO]ver[LAm]tà\n[FA]e la tua gran[DO]dez[SOL]za.\n\n[LAm]Noi ti offriamo le [DO]cose\n[LAm]che tu stesso ci hai [DO]dato\n[FA]e tu in cambio do[DO]na[LAm]ci\n[REm]donaci [SOL]te [DO]stesso.\n"
+ },
+ {
+  "slug": "alleluia-la-nostra-festa",
+  "title": "Alleluia, la nostra festa",
+  "subtitle": "",
+  "key": "RE",
+  "categories": [
+   "preghiera"
+  ],
+  "body": "{title: Alleluia, la nostra festa}\n{categories: preghiera}\n{key: RE}\n\n{start_of_chorus}\n[RE]Alleluia, [SOL]Alle[RE]luia, Alleluia, [LA]Alleluia\n[RE]Alleluia, [SOL]Alle[RE]luia, [LA]Alle[RE]luia.\n{end_of_chorus}\n\n[RE]La nostra festa non de[SOL]ve fi[LA]ni[RE]re\nnon deve fi[SIm]nire e [MIm]non fi[LA]ni[RE]rà.\nLa nostra festa non deve finire\nnon deve finire e non finirà.\n\n[SOL]Perché la [LA]festa siamo [RE]noi [FA#m]\n[SOL]che cammi[MIm]niamo [LA]verso [RE7]te.\n[SOL]Perché la [LA]festa [SIm]siamo [FA#m]noi\n[SOL]cantando in[MI]sieme co[LA7]sì.\n\n{comment: Rit.}\n"
+ },
+ {
+  "slug": "alleluia-passeranno-i-cieli",
+  "title": "Alleluia, passeranno i cieli",
+  "subtitle": "",
+  "key": "FA",
+  "categories": [
+   "preghiera"
+  ],
+  "body": "{title: Alleluia, passeranno i cieli}\n{categories: preghiera}\n{key: FA}\n\n{start_of_chorus}\n[FA]Alle-alle[DO]luia, a--lle[REm]luia, alle[LAm]luia\n[SIb]Alle[FA]luia, alle[SOLm]lu--[DO7]ia, [FA]a-a-a--[SIb]lle[DO7]luia, alle[FA]luia\n{end_of_chorus}\n\nPasseranno i cieli e passerà la terra\nLa sua parola non passerà alleluia, alleluia.\n\n{comment: Rit.}\n"
+ },
+ {
+  "slug": "canto-della-promessa",
+  "title": "Canto della Promessa",
+  "subtitle": "",
+  "key": "RE",
+  "categories": [
+   "scout"
+  ],
+  "body": "{title: Canto della Promessa}\n{categories: scout}\n{key: RE}\n\n[RE]Dinanzi a voi m'impegno sul mio o[LA]nor\n[RE]e voglio esserne degno per [LA]Te, o Si[RE]gnor.\n[SOL]La giusta e [RE]retta [LA]via mostrami [RE]Tu\ne la promessa mia accogli, Gesù.\n\nFedele al tuo volere sempre sarò\ndi Patria il mio dovere adempirò.\n\nApostolo Tuo sono per il Tuo amor\nagli altri di me dono vo' fare ognor.\n\nLeale alla mia legge sempre sarò\nse la tua man mi regge io la manterrò.\n"
+ }
+]

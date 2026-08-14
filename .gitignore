@@ -1,0 +1,9 @@
+# Claude Code local files
+.claude/
+
+# Source PDF (not part of the site)
+CANZONIERE_DEFINITIVO.pdf
+
+# OS cruft
+.DS_Store
+Thumbs.db
