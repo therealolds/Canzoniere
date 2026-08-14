@@ -64,8 +64,8 @@ function autoCorrelate(buf, sampleRate) {
 export function mountTuner(container) {
   container.innerHTML = `
     <section class="page tuner">
-      <a class="back" href="#/">‹ Indice</a>
-      <h1>🎸 Accordatore</h1>
+      <a class="back" href="#/utilities">‹ Strumenti</a>
+      <h1>Accordatore</h1>
 
       <div class="tuner-display" id="t-display">
         <div class="tuner-note" id="t-note">–</div>
@@ -76,7 +76,7 @@ export function mountTuner(container) {
         <div class="tuner-cents" id="t-cents">±0</div>
       </div>
 
-      <button id="t-start" class="ctl primary">🎤 Avvia microfono</button>
+      <button id="t-start" class="ctl primary">Avvia microfono</button>
       <p class="hint" id="t-status">Serve il permesso del microfono (funziona solo su https o localhost).</p>
 
       <h2 class="tuner-sub">Note di riferimento</h2>
@@ -152,7 +152,7 @@ export function mountTuner(container) {
     buffer = new Float32Array(analyser.fftSize);
     source.connect(analyser);
     listening = true;
-    startBtn.textContent = '⏹ Ferma';
+    startBtn.textContent = 'Ferma';
     statusEl.textContent = 'In ascolto… suona una corda alla volta.';
     update();
   }
@@ -164,7 +164,7 @@ export function mountTuner(container) {
     if (stream) stream.getTracks().forEach((t) => t.stop());
     stream = null;
     analyser = null;
-    startBtn.textContent = '🎤 Avvia microfono';
+    startBtn.textContent = 'Avvia microfono';
     statusEl.textContent = 'Microfono fermo.';
     noteEl.textContent = '–';
     centsEl.textContent = '±0';

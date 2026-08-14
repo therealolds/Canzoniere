@@ -175,7 +175,7 @@ export function renderSong(parsed, options = {}) {
       continue;
     }
     if (block.type === 'chorus_label') {
-      html.push(`<div class="chorus-label">↻ ${escapeHtml(block.text)}</div>`);
+      html.push(`<div class="chorus-label">${escapeHtml(block.text)}</div>`);
       continue;
     }
     let cls = block.chorus ? 'song-line chorus' : 'song-line';
@@ -198,4 +198,40 @@ export function plainLyrics(source) {
     .replace(/\[[^\]]*\]/g, '')
     .replace(/\n{2,}/g, '\n')
     .trim();
+}
+
+// Render a parsed song to plain text for export.
+// opts.chords=false -> lyrics only; true -> chords on a line above the lyrics.
+export function songToText(parsed, opts = {}) {
+  const withChords = !!opts.chords;
+  const out = [];
+  const title = parsed.meta.title || '';
+  if (title) out.push(title.toUpperCase());
+  if (parsed.meta.subtitle) out.push(`(${parsed.meta.subtitle})`);
+  if (title || parsed.meta.subtitle) out.push('');
+
+  for (const block of parsed.blocks) {
+    if (block.type === 'break') { out.push(''); continue; }
+    if (block.type === 'comment' || block.type === 'chorus_label') { out.push(block.text); continue; }
+    if (block.type !== 'line') continue;
+
+    if (withChords) {
+      let lyric = '';
+      let chordLine = '';
+      let hasChord = false;
+      for (const seg of block.segments) {
+        if (seg.chord) {
+          hasChord = true;
+          if (chordLine.length < lyric.length) chordLine += ' '.repeat(lyric.length - chordLine.length);
+          chordLine += seg.chord + ' ';
+        }
+        lyric += seg.text;
+      }
+      if (hasChord) out.push(chordLine.replace(/\s+$/, ''));
+      out.push(lyric);
+    } else {
+      out.push(block.segments.map((s) => s.text).join(''));
+    }
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
 }

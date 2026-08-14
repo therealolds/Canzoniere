@@ -1,5 +1,5 @@
 // Simple offline cache for the songbook. Bump CACHE when app files change.
-const CACHE = 'canzoniere-v2';
+const CACHE = 'canzoniere-v6';
 const CORE = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const CORE = [
   './songs.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/mark.png',
 ];
 
 self.addEventListener('install', (event) => {
