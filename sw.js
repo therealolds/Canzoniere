@@ -1,5 +1,5 @@
 // Simple offline cache for the songbook. Bump CACHE when app files change.
-const CACHE = 'canzoniere-v6';
+const CACHE = 'canzoniere-v11';
 const CORE = [
   './',
   './index.html',

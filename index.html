@@ -32,13 +32,16 @@
       <img class="brand-mark" src="./icons/mark.png" alt="" aria-hidden="true" />
       Canzoniere
     </a>
-    <input id="search" class="search" type="search" placeholder="Cerca titolo o testo…" autocomplete="off" />
+    <div class="search-wrap">
+      <input id="search" class="search" type="text" placeholder="Cerca titolo o testo…" autocomplete="off" />
+      <button id="search-clear" class="search-clear" aria-label="Cancella ricerca" hidden>&times;</button>
+    </div>
   </header>
 
   <div id="drawer-backdrop" class="backdrop"></div>
   <nav id="drawer" class="drawer" aria-label="Menu">
     <div class="drawer-head">Menu</div>
-    <a href="#/" data-nav>Indice</a>
+    <a href="#/" data-nav>Canzoni</a>
     <a href="#/settings" data-nav>Impostazioni</a>
     <a href="#/utilities" data-nav>Strumenti</a>
     <a href="#/info" data-nav>Info</a>
@@ -46,7 +49,7 @@
 
   <main id="app" class="app"></main>
 
-  <footer class="footer">Gruppo Scout · testi e accordi</footer>
+  <footer class="footer">Gruppo Scout Modena 8 · Canzoniere</footer>
 
   <div class="ridge" aria-hidden="true"></div>
 

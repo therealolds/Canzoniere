@@ -6,7 +6,7 @@ const CATEGORY_LABELS = {
   preghiera: 'Canzoni per la preghiera',
   italiane: 'Canzoni italiane',
   internazionali: 'Canzoni internazionali',
-  scout: 'Canti scout',
+  scout: 'Canzoni scout',
 };
 const CATEGORY_ORDER = ['preghiera', 'italiane', 'internazionali', 'scout'];
 
@@ -104,13 +104,13 @@ function renderHome(query = '') {
   const sortedCats = [...groups.keys()].sort((a, b) => categoryRank(a) - categoryRank(b) || a.localeCompare(b));
 
   const searching = q.length > 0;
-  const collapsed = new Set(loadPref('collapsedCats', []));
+  const openCats = new Set(loadPref('openCats', []));
 
   const parts = [];
   if (q) parts.push(`<p class="result-count">${matches.length} risultat${matches.length === 1 ? 'o' : 'i'}</p>`);
   for (const cat of sortedCats) {
     const list = groups.get(cat).slice().sort((a, b) => a.title.localeCompare(b.title, 'it'));
-    const open = searching || !collapsed.has(cat);
+    const open = searching || openCats.has(cat);
     parts.push(`<details class="category" data-cat="${escapeHtml(cat)}"${open ? ' open' : ''}>
       <summary class="category-title">
         <span class="chevron">▸</span>
@@ -131,9 +131,9 @@ function renderHome(query = '') {
   if (!searching) {
     app.querySelectorAll('details.category').forEach((d) => {
       d.addEventListener('toggle', () => {
-        const set = new Set(loadPref('collapsedCats', []));
-        if (d.open) set.delete(d.dataset.cat); else set.add(d.dataset.cat);
-        savePref('collapsedCats', [...set]);
+        const set = new Set(loadPref('openCats', []));
+        if (d.open) set.add(d.dataset.cat); else set.delete(d.dataset.cat);
+        savePref('openCats', [...set]);
       });
     });
   }
@@ -142,7 +142,7 @@ function renderHome(query = '') {
 function renderSongView(slug) {
   const song = state.bySlug.get(slug);
   if (!song) {
-    app.innerHTML = `<p class="empty">Canzone non trovata. <a href="#/">Torna all'indice</a></p>`;
+    app.innerHTML = `<p class="empty">Canzone non trovata. <a href="#/">Torna alle canzoni</a></p>`;
     return;
   }
   const parsed = parseSong(song.body);
@@ -156,13 +156,13 @@ function renderSongView(slug) {
     app.innerHTML = `
       <article class="song ${state.showChords ? '' : 'hide-chords'}">
         <div class="song-head">
-          <a class="back" href="#/">‹ Indice</a>
+          <a class="back" href="#/">‹ Canzoni</a>
           <h1 class="song-name">${escapeHtml(parsed.meta.title || song.title)}</h1>
           ${parsed.meta.subtitle ? `<p class="song-subtitle">${escapeHtml(parsed.meta.subtitle)}</p>` : ''}
         </div>
         <div class="song-controls">
           <button id="toggle-chords" class="ctl" aria-pressed="${state.showChords}">
-            ${state.showChords ? '🎸 Accordi: ON' : '🎤 Accordi: OFF'}
+            ${state.showChords ? 'Accordi: ON' : 'Accordi: OFF'}
           </button>
           <div class="transpose ${state.showChords ? '' : 'disabled'}">
             <button id="tr-down" class="ctl" title="Abbassa">−</button>
@@ -195,7 +195,7 @@ function renderSettings() {
     <span>${label}</span>
   </label>`;
   app.innerHTML = `<section class="page">
-    <a class="back" href="#/">‹ Indice</a>
+    <a class="back" href="#/">‹ Canzoni</a>
     <h1>Impostazioni</h1>
     <div class="setting">
       <h2>Tema</h2>
@@ -232,7 +232,7 @@ function renderSettings() {
 function renderInfo() {
   const repo = 'https://github.com/therealolds/Canzoniere';
   app.innerHTML = `<section class="page info">
-    <a class="back" href="#/">‹ Indice</a>
+    <a class="back" href="#/">‹ Canzoni</a>
     <h1>Info</h1>
 
     <p>Canzoniere del gruppo scout: testi e accordi, con ricerca, accordi
@@ -272,7 +272,7 @@ function renderInfo() {
 
 function renderUtilities() {
   app.innerHTML = `<section class="page">
-    <a class="back" href="#/">‹ Indice</a>
+    <a class="back" href="#/">‹ Canzoni</a>
     <h1>Strumenti</h1>
     <div class="tool-list">
       <a class="tool-card" href="#/tuner">
@@ -430,9 +430,24 @@ async function init() {
     return;
   }
 
-  searchInput.addEventListener('input', () => {
+  const clearBtn = document.getElementById('search-clear');
+  const onSearchChange = () => {
+    clearBtn.hidden = searchInput.value === '';
     if (location.hash && location.hash !== '#/') location.hash = '#/';
     else renderHome(searchInput.value);
+  };
+  searchInput.addEventListener('input', onSearchChange);
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && searchInput.value) {
+      e.stopPropagation();
+      searchInput.value = '';
+      onSearchChange();
+    }
+  });
+  clearBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    searchInput.focus();
+    onSearchChange();
   });
 
   // Hamburger menu
