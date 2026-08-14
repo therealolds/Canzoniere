@@ -17,6 +17,8 @@
         var t = JSON.parse(localStorage.getItem('theme')) || 'auto';
         var dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        var s = JSON.parse(localStorage.getItem('style')) || 'default';
+        document.documentElement.setAttribute('data-style', s);
       } catch (e) { /* default light */ }
     })();
   </script>

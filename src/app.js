@@ -56,6 +56,12 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
 }
 
+function applyStyle(style) {
+  document.documentElement.setAttribute('data-style', style || 'default');
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', style === 'medievale' ? '#3b2a17' : '#16181b');
+}
+
 // ---- Drawer menu -------------------------------------------------------------
 function openMenu() {
   drawer.classList.add('open');
@@ -194,6 +200,11 @@ function renderSettings() {
     <input type="radio" name="theme" value="${val}"${current === val ? ' checked' : ''} />
     <span>${label}</span>
   </label>`;
+  const currentStyle = loadPref('style', 'default');
+  const styleOpt = (val, label) => `<label class="radio">
+    <input type="radio" name="style" value="${val}"${currentStyle === val ? ' checked' : ''} />
+    <span>${label}</span>
+  </label>`;
   app.innerHTML = `<section class="page">
     <a class="back" href="#/">‹ Canzoni</a>
     <h1>Impostazioni</h1>
@@ -203,6 +214,13 @@ function renderSettings() {
         ${opt('light', 'Chiaro')}
         ${opt('dark', 'Scuro')}
         ${opt('auto', 'Automatico (sistema)')}
+      </div>
+    </div>
+    <div class="setting">
+      <h2>Stile</h2>
+      <div class="radio-group">
+        ${styleOpt('default', 'Default')}
+        ${styleOpt('medievale', 'Medievale')}
       </div>
     </div>
     <div class="setting">
@@ -218,6 +236,12 @@ function renderSettings() {
     r.addEventListener('change', () => {
       savePref('theme', r.value);
       applyTheme(r.value);
+    });
+  });
+  app.querySelectorAll('input[name="style"]').forEach((r) => {
+    r.addEventListener('change', () => {
+      savePref('style', r.value);
+      applyStyle(r.value);
     });
   });
   const chordsPref = document.getElementById('chords-pref');
