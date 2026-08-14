@@ -577,3 +577,88 @@ h1, h2 {
   .song-body { font-size: 1rem; }
   .tuner-note { font-size: 3rem; }
 }
+
+/* =============================================================
+   "Medievale" — illuminated manuscript skin
+   Overrides come last so they win over the light/dark palettes.
+   ============================================================= */
+:root[data-style="medievale"] {
+  --bg: #ece0bf;
+  --card: #f4ead0;
+  --text: #3a2a17;
+  --muted: #8a6f4a;
+  --border: #cbb488;
+  --accent: #9e2b1e;        /* rubric red */
+  --accent-ink: #8f2417;
+  --chord: #8f2417;
+  --chorus: #e7d4a7;
+  --bar: #3b2a17;           /* aged brown */
+  --bar-text: #f2e6c4;
+  --bar-accent: #b8860b;    /* gold */
+  --radius: 0px;
+  --font-body: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-head: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-display: "Old English Text MT", "UnifrakturCook", "Cloister Black", "Palatino Linotype", Georgia, serif;
+}
+
+/* Vellum background with aged, uneven edges. */
+[data-style="medievale"] body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(120% 80% at 50% -15%, rgba(110, 70, 25, .10), transparent 60%),
+    radial-gradient(90% 60% at 0% 100%, rgba(110, 70, 25, .14), transparent 55%),
+    radial-gradient(90% 60% at 100% 100%, rgba(110, 70, 25, .14), transparent 55%);
+  background-attachment: fixed;
+}
+
+/* No alpine horizon in the scriptorium. */
+[data-style="medievale"] .ridge { display: none; }
+
+/* Blackletter display type for the strongest headings. */
+[data-style="medievale"] .brand {
+  font-family: var(--font-display);
+  text-transform: none;
+  letter-spacing: .01em;
+  font-weight: 400;
+  font-size: 1.35rem;
+}
+[data-style="medievale"] .category-title {
+  font-family: var(--font-display);
+  text-transform: none;
+  color: var(--accent-ink);
+  font-size: 1.25rem;
+}
+[data-style="medievale"] .song-name {
+  font-family: var(--font-display);
+  text-transform: none;
+  font-weight: 400;
+  color: #6a1e12;
+  border-bottom: 3px double var(--bar-accent);
+  padding-bottom: .15rem;
+}
+[data-style="medievale"] .chorus-label {
+  font-family: var(--font-display);
+  text-transform: none;
+  letter-spacing: .02em;
+  font-size: 1.05rem;
+  color: var(--accent-ink);
+}
+
+/* Rubric-red section rules. */
+[data-style="medievale"] .setting h2,
+[data-style="medievale"] .info h2,
+[data-style="medievale"] .tuner-sub {
+  border-bottom-color: var(--accent);
+}
+
+/* Faint manuscript ruling behind the lyrics. */
+[data-style="medievale"] .song-body {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1.7em,
+    rgba(150, 40, 25, .09) 1.7em,
+    rgba(150, 40, 25, .09) calc(1.7em + 1px)
+  );
+}
+
