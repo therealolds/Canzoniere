@@ -1,47 +1,48 @@
 #!/usr/bin/env python3
-"""Generate placeholder PWA icons (green tile + white note dot). Stdlib only.
+"""Generate the PWA icons from icons/icon-source.jpeg.
 
-Run once (or after editing):   py scripts/make_icons.py
-Replace icons/ with real artwork whenever you like.
+Center-crops the source to a square, then resizes to the sizes the manifest
+references. Requires Pillow (pip install pillow).
+
+Run:   py scripts/make_icons.py
 """
-import struct
-import zlib
 from pathlib import Path
 
+from PIL import Image
+
 ICONS = Path(__file__).resolve().parent.parent / "icons"
-GREEN = (46, 125, 50)
-WHITE = (245, 245, 240)
-
-
-def make_png(size):
-    cx = cy = size / 2
-    r = size * 0.26
-    stem_x0, stem_x1 = cx + r * 0.75, cx + r * 1.05
-    rows = bytearray()
-    for y in range(size):
-        rows.append(0)  # PNG filter type 0 for this scanline
-        for x in range(size):
-            # note head (filled circle) + a simple stem
-            in_head = (x - cx) ** 2 + (y - cy + r * 0.35) ** 2 <= r * r
-            in_stem = stem_x0 <= x <= stem_x1 and (cy - r * 1.4) <= y <= (cy + r * 0.1)
-            rows += bytes(WHITE if (in_head or in_stem) else GREEN)
-
-    def chunk(tag, data):
-        c = struct.pack(">I", len(data)) + tag + data
-        return c + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
-
-    ihdr = struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0)  # 8-bit RGB
-    return (b"\x89PNG\r\n\x1a\n"
-            + chunk(b"IHDR", ihdr)
-            + chunk(b"IDAT", zlib.compress(bytes(rows), 9))
-            + chunk(b"IEND", b""))
+SOURCE = ICONS / "icon-source.jpeg"
+SIZES = (192, 512)
 
 
 def main():
-    ICONS.mkdir(exist_ok=True)
-    for size in (192, 512):
-        (ICONS / f"icon-{size}.png").write_bytes(make_png(size))
+    if not SOURCE.exists():
+        raise SystemExit(f"Source image not found: {SOURCE}")
+
+    img = Image.open(SOURCE).convert("RGB")
+    w, h = img.size
+    side = min(w, h)
+    left = (w - side) // 2
+    top = (h - side) // 2
+    square = img.crop((left, top, left + side, top + side))
+
+    for size in SIZES:
+        out = square.resize((size, size), Image.LANCZOS)
+        out.save(ICONS / f"icon-{size}.png", "PNG")
         print(f"wrote icons/icon-{size}.png")
+
+    # Transparent header mark: chroma-key the near-black background away so the
+    # amber art blends into the dark top bar (or any background).
+    mark = square.resize((128, 128), Image.LANCZOS).convert("RGBA")
+    px = mark.load()
+    for y in range(128):
+        for x in range(128):
+            r, g, b, _ = px[x, y]
+            luma = 0.299 * r + 0.587 * g + 0.114 * b
+            alpha = 0 if luma < 18 else min(255, int((luma - 14) * 4))
+            px[x, y] = (r, g, b, alpha)
+    mark.save(ICONS / "mark.png", "PNG")
+    print("wrote icons/mark.png")
 
 
 if __name__ == "__main__":

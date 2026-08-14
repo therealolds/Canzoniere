@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Canzoniere</title>
   <meta name="description" content="Canzoniere del gruppo scout: testi e accordi." />
-  <meta name="theme-color" content="#2e7d32" />
+  <meta name="theme-color" content="#16181b" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icons/icon-192.png" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
@@ -23,23 +23,32 @@
 </head>
 <body>
   <header class="topbar">
-    <button id="menu-btn" class="icon-btn" aria-label="Apri menu" aria-expanded="false">☰</button>
-    <a class="brand" href="#/">🏕️ Canzoniere</a>
+    <button id="menu-btn" class="icon-btn" aria-label="Apri menu" aria-expanded="false">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </button>
+    <a class="brand" href="#/">
+      <img class="brand-mark" src="./icons/mark.png" alt="" aria-hidden="true" />
+      Canzoniere
+    </a>
     <input id="search" class="search" type="search" placeholder="Cerca titolo o testo…" autocomplete="off" />
   </header>
 
   <div id="drawer-backdrop" class="backdrop"></div>
   <nav id="drawer" class="drawer" aria-label="Menu">
     <div class="drawer-head">Menu</div>
-    <a href="#/" data-nav>🏠 Indice</a>
-    <a href="#/settings" data-nav>⚙️ Impostazioni</a>
-    <a href="#/utilities" data-nav>🧰 Strumenti</a>
-    <a href="#/info" data-nav>ℹ️ Info</a>
+    <a href="#/" data-nav>Indice</a>
+    <a href="#/settings" data-nav>Impostazioni</a>
+    <a href="#/utilities" data-nav>Strumenti</a>
+    <a href="#/info" data-nav>Info</a>
   </nav>
 
   <main id="app" class="app"></main>
 
   <footer class="footer">Gruppo Scout · testi e accordi</footer>
+
+  <div class="ridge" aria-hidden="true"></div>
 
   <script type="module" src="./src/app.js"></script>
 </body>
