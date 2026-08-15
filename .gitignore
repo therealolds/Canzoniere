@@ -1,8 +1,9 @@
 # Claude Code local files
 .claude/
 
-# Source PDF (not part of the site)
+# Source PDF (not part of the site) and stuff
 CANZONIERE_DEFINITIVO.pdf
+ELENCO.txt
 
 # OS cruft
 .DS_Store

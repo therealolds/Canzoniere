@@ -49,7 +49,7 @@ function looksLikeChord(token) {
 //   type 'comment' -> { text }
 //   type 'break'   -> stanza separator
 export function parseSong(source) {
-  const meta = { title: '', subtitle: '', key: '', categories: [] };
+  const meta = { title: '', subtitle: '', key: '', categories: [], tempo: null };
   const blocks = [];
   let inChorus = false;
   let pendingBreak = false;
@@ -83,6 +83,7 @@ export function parseSong(source) {
         case 'title': case 't': meta.title = value; break;
         case 'subtitle': case 'st': meta.subtitle = value; break;
         case 'key': meta.key = value; break;
+        case 'tempo': meta.tempo = parseInt(value, 10) || null; break;
         case 'categories': case 'category': case 'tags':
           meta.categories = value.split(',').map((s) => s.trim()).filter(Boolean);
           break;
