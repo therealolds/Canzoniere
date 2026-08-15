@@ -530,6 +530,41 @@ h1, h2 {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---- Metronome ---- */
+.metronome {
+  display: flex;
+  align-items: center;
+  gap: .9rem;
+  flex-wrap: wrap;
+  padding: .5rem .1rem .7rem;
+  margin-bottom: .4rem;
+  border-bottom: 1px solid var(--border);
+}
+.metro-lights { display: flex; gap: .7rem; }
+.metro-lights .dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: transform .07s ease, background .07s ease, box-shadow .07s ease;
+}
+.metro-lights .dot.on {
+  background: var(--accent);
+  transform: scale(1.55);
+  box-shadow: 0 0 10px var(--accent);
+}
+.metro-bpm { display: flex; align-items: center; gap: .4rem; margin-left: auto; }
+.metro-val {
+  font-family: var(--font-head);
+  font-size: .85rem;
+  letter-spacing: .05em;
+  color: var(--muted);
+  min-width: 4.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.metro-val b { color: var(--text); font-size: 1.05rem; }
+
 /* ---- Chord rendering ---- */
 .song-body {
   font-size: 1.05rem;
@@ -651,14 +686,14 @@ h1, h2 {
   border-bottom-color: var(--accent);
 }
 
-/* Faint manuscript ruling behind the lyrics. */
-[data-style="medievale"] .song-body {
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 1.7em,
-    rgba(150, 40, 25, .09) 1.7em,
-    rgba(150, 40, 25, .09) calc(1.7em + 1px)
-  );
+/* Manuscript ruling drawn per line, so the spacing adapts to each row's
+   height (taller when chords are shown, shorter when they're hidden). */
+[data-style="medievale"] .song-line {
+  border-bottom: 1px solid rgba(150, 40, 25, .13);
+  padding-bottom: .1em;
+  margin-bottom: .35rem;
+}
+[data-style="medievale"] .song.hide-chords .song-line {
+  margin-bottom: .15rem;
 }
 

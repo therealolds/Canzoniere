@@ -7,8 +7,9 @@ const CATEGORY_LABELS = {
   italiane: 'Canzoni italiane',
   internazionali: 'Canzoni internazionali',
   scout: 'Canzoni scout',
+  popolari: 'Canzoni popolari',
 };
-const CATEGORY_ORDER = ['preghiera', 'italiane', 'internazionali', 'scout'];
+const CATEGORY_ORDER = ['preghiera', 'italiane', 'internazionali', 'scout', 'popolari'];
 
 function categoryLabel(cat) { return CATEGORY_LABELS[cat] || cat; }
 function categoryRank(cat) {
@@ -21,6 +22,7 @@ const state = {
   songs: [],
   bySlug: new Map(),
   showChords: loadPref('showChords', false),
+  metronome: loadPref('metronome', false),
 };
 
 const app = document.getElementById('app');
@@ -48,6 +50,8 @@ function savePref(key, value) {
 function escapeHtml(s) {
   return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
+
+const clampBpm = (v) => Math.max(30, Math.min(300, Math.round(Number(v) || 90)));
 
 // ---- Theme -------------------------------------------------------------------
 const darkQuery = matchMedia('(prefers-color-scheme: dark)');
@@ -155,10 +159,84 @@ function renderSongView(slug) {
   // Per-view transpose, reset on each open.
   let transpose = 0;
 
+  // Metronome (visual only): tempo seeded from the song's {tempo}, adjustable
+  // and remembered per song.
+  const metroOn = state.metronome;
+  let bpm = clampBpm(loadPref(`tempo:${slug}`, parsed.meta.tempo || 90));
+  let running = false;
+  let beat = 0;
+  let nextBeat = 0;
+  let metroRAF = null;
+  const stopLoop = () => { if (metroRAF) { cancelAnimationFrame(metroRAF); metroRAF = null; } };
+
+  // Release the animation loop when leaving the page.
+  pageCleanup = () => { running = false; stopLoop(); };
+
+  function bindMetro() {
+    const toggleBtn = document.getElementById('m-toggle');
+    const dotL = document.getElementById('m-l');
+    const dotR = document.getElementById('m-r');
+    const valEl = document.getElementById('m-val');
+
+    const clearDots = () => { dotL.classList.remove('on'); dotR.classList.remove('on'); };
+    const flash = (b) => {
+      const left = b % 2 === 0;
+      dotL.classList.toggle('on', left);
+      dotR.classList.toggle('on', !left);
+    };
+    const startLoop = () => {
+      beat = 0;
+      nextBeat = performance.now();
+      const tick = (now) => {
+        if (!running) return;
+        while (now >= nextBeat) {
+          flash(beat);
+          beat += 1;
+          nextBeat += 60000 / bpm;
+        }
+        metroRAF = requestAnimationFrame(tick);
+      };
+      metroRAF = requestAnimationFrame(tick);
+    };
+
+    toggleBtn.onclick = () => {
+      running = !running;
+      toggleBtn.textContent = running ? 'Ferma' : 'Avvia';
+      if (running) startLoop(); else { stopLoop(); clearDots(); }
+    };
+    const setBpm = (v) => { bpm = clampBpm(v); valEl.textContent = bpm; savePref(`tempo:${slug}`, bpm); };
+    document.getElementById('m-minus').onclick = () => setBpm(bpm - 2);
+    document.getElementById('m-plus').onclick = () => setBpm(bpm + 2);
+
+    let taps = [];
+    document.getElementById('m-tap').onclick = () => {
+      const now = performance.now();
+      taps = taps.filter((t) => now - t < 3000).concat(now);
+      if (taps.length >= 2) {
+        const gaps = taps.slice(1).map((t, i) => t - taps[i]);
+        setBpm(60000 / (gaps.reduce((a, b) => a + b, 0) / gaps.length));
+      }
+    };
+
+    if (running) startLoop();
+  }
+
   function draw() {
+    stopLoop();
     const keyLabel = parsed.meta.key
       ? `<span class="song-key">Tono: ${escapeHtml(parsed.meta.key)}${transpose ? ` (${transpose > 0 ? '+' : ''}${transpose})` : ''}</span>`
       : '';
+    const metroBar = metroOn ? `
+        <div class="metronome">
+          <button id="m-toggle" class="ctl">${running ? 'Ferma' : 'Avvia'}</button>
+          <div class="metro-lights"><span class="dot" id="m-l"></span><span class="dot" id="m-r"></span></div>
+          <div class="metro-bpm">
+            <button id="m-minus" class="ctl small" title="Rallenta">−</button>
+            <span class="metro-val"><b id="m-val">${bpm}</b> BPM</span>
+            <button id="m-plus" class="ctl small" title="Accelera">+</button>
+            <button id="m-tap" class="ctl small">Tap</button>
+          </div>
+        </div>` : '';
     app.innerHTML = `
       <article class="song ${state.showChords ? '' : 'hide-chords'}">
         <div class="song-head">
@@ -177,6 +255,7 @@ function renderSongView(slug) {
             <button id="tr-reset" class="ctl" title="Ripristina">↺</button>
           </div>
         </div>
+        ${metroBar}
         <div class="song-body">${renderSong(parsed, { transpose, showChords: state.showChords })}</div>
       </article>`;
 
@@ -188,6 +267,7 @@ function renderSongView(slug) {
     document.getElementById('tr-down').onclick = () => { transpose -= 1; draw(); };
     document.getElementById('tr-up').onclick = () => { transpose += 1; draw(); };
     document.getElementById('tr-reset').onclick = () => { transpose = 0; draw(); };
+    if (metroOn) bindMetro();
     window.scrollTo(0, 0);
   }
   draw();
@@ -231,6 +311,14 @@ function renderSettings() {
       </label>
       <p class="hint">Impostazione salvata: le canzoni si apriranno con gli accordi ${state.showChords ? 'visibili' : 'nascosti'}.</p>
     </div>
+    <div class="setting">
+      <h2>Metronomo</h2>
+      <label class="radio">
+        <input type="checkbox" id="metro-pref"${state.metronome ? ' checked' : ''} />
+        <span>Mostra il metronomo nelle canzoni</span>
+      </label>
+      <p class="hint">Un pulsare luminoso a tempo (senza suono) sopra il testo di ogni canzone.</p>
+    </div>
   </section>`;
   app.querySelectorAll('input[name="theme"]').forEach((r) => {
     r.addEventListener('change', () => {
@@ -249,6 +337,10 @@ function renderSettings() {
     state.showChords = chordsPref.checked;
     savePref('showChords', state.showChords);
     renderSettings(); // refresh the hint text
+  });
+  document.getElementById('metro-pref').addEventListener('change', (e) => {
+    state.metronome = e.target.checked;
+    savePref('metronome', state.metronome);
   });
   window.scrollTo(0, 0);
 }
