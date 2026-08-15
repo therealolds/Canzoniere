@@ -11,6 +11,10 @@ const CATEGORY_LABELS = {
 };
 const CATEGORY_ORDER = ['preghiera', 'italiane', 'internazionali', 'scout', 'popolari'];
 
+// Soft gate for explicit songs. NOTE: this is cosmetic — the songs are in the
+// source, so it only stops casual access. Change this to your own word.
+const EXPLICIT_PASSWORD = 'gemboy';
+
 function categoryLabel(cat) { return CATEGORY_LABELS[cat] || cat; }
 function categoryRank(cat) {
   const i = CATEGORY_ORDER.indexOf(cat);
@@ -23,6 +27,8 @@ const state = {
   bySlug: new Map(),
   showChords: loadPref('showChords', false),
   metronome: loadPref('metronome', false),
+  explicitUnlocked: loadPref('explicitUnlocked', false),
+  groupBy: loadPref('groupBy', 'category'),
 };
 
 const app = document.getElementById('app');
@@ -93,57 +99,84 @@ async function loadSongs() {
 // ---- Views -------------------------------------------------------------------
 function renderHome(query = '') {
   const q = normalize(query.trim());
-  const matches = q
-    ? state.songs.filter((s) => s.search.includes(q))
-    : state.songs;
+  const pool = state.explicitUnlocked ? state.songs : state.songs.filter((s) => !s.explicit);
+  const matches = q ? pool.filter((s) => s.search.includes(q)) : pool;
+  const byArtist = state.groupBy === 'artist';
+  const NOART = 'Senza artista';
+
+  const toggle = `<div class="view-toggle">
+    <button class="vt${byArtist ? '' : ' active'}" data-view="category">Categorie</button>
+    <button class="vt${byArtist ? ' active' : ''}" data-view="artist">Artisti</button>
+  </div>`;
+  const attachToggle = () => {
+    app.querySelectorAll('.vt').forEach((b) => b.addEventListener('click', () => {
+      state.groupBy = b.dataset.view;
+      savePref('groupBy', state.groupBy);
+      renderHome(searchInput.value);
+    }));
+  };
 
   if (matches.length === 0) {
-    app.innerHTML = `<p class="empty">Nessuna canzone trovata per “${escapeHtml(query)}”.</p>`;
+    app.innerHTML = `${toggle}<p class="empty">Nessuna canzone trovata${q ? ` per “${escapeHtml(query)}”` : ''}.</p>`;
+    attachToggle();
     return;
   }
 
-  // Group by (primary) category.
+  // Group by category (default) or by artist (subtitle).
   const groups = new Map();
   for (const song of matches) {
-    const cats = song.categories.length ? song.categories : ['(senza categoria)'];
-    for (const cat of cats) {
-      if (!groups.has(cat)) groups.set(cat, []);
-      groups.get(cat).push(song);
+    const keys = byArtist
+      ? [song.subtitle && song.subtitle.trim() ? song.subtitle.trim() : NOART]
+      : (song.categories.length ? song.categories : ['(senza categoria)']);
+    for (const k of keys) {
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(song);
     }
   }
-  const sortedCats = [...groups.keys()].sort((a, b) => categoryRank(a) - categoryRank(b) || a.localeCompare(b));
+  const sortedKeys = [...groups.keys()].sort((a, b) => {
+    if (byArtist) {
+      if (a === NOART) return 1;
+      if (b === NOART) return -1;
+      return a.localeCompare(b, 'it');
+    }
+    return categoryRank(a) - categoryRank(b) || a.localeCompare(b);
+  });
 
+  const openKey = `open:${state.groupBy}`;
+  const openSet = new Set(loadPref(openKey, []));
   const searching = q.length > 0;
-  const openCats = new Set(loadPref('openCats', []));
 
-  const parts = [];
+  const parts = [toggle];
   if (q) parts.push(`<p class="result-count">${matches.length} risultat${matches.length === 1 ? 'o' : 'i'}</p>`);
-  for (const cat of sortedCats) {
-    const list = groups.get(cat).slice().sort((a, b) => a.title.localeCompare(b.title, 'it'));
-    const open = searching || openCats.has(cat);
-    parts.push(`<details class="category" data-cat="${escapeHtml(cat)}"${open ? ' open' : ''}>
+  for (const key of sortedKeys) {
+    const list = groups.get(key).slice().sort((a, b) => a.title.localeCompare(b.title, 'it'));
+    const label = byArtist ? key : categoryLabel(key);
+    const open = searching || openSet.has(key);
+    parts.push(`<details class="category" data-group="${escapeHtml(key)}"${open ? ' open' : ''}>
       <summary class="category-title">
         <span class="chevron">▸</span>
-        <span class="cat-name">${escapeHtml(categoryLabel(cat))}</span>
+        <span class="cat-name">${escapeHtml(label)}</span>
         <span class="count">${list.length}</span>
       </summary>
       <ul class="song-list">
         ${list.map((s) => `<li><a href="#/song/${encodeURIComponent(s.slug)}">
           <span class="song-title">${escapeHtml(s.title)}</span>
-          ${s.subtitle ? `<span class="song-sub">${escapeHtml(s.subtitle)}</span>` : ''}
+          ${!byArtist && s.subtitle ? `<span class="song-sub">${escapeHtml(s.subtitle)}</span>` : ''}
+          ${s.explicit ? '<span class="explicit-badge">E</span>' : ''}
         </a></li>`).join('')}
       </ul>
     </details>`);
   }
   app.innerHTML = parts.join('\n');
+  attachToggle();
 
-  // Remember collapsed/expanded state per device (skip while searching).
+  // Remember collapsed/expanded state per view (skip while searching).
   if (!searching) {
     app.querySelectorAll('details.category').forEach((d) => {
       d.addEventListener('toggle', () => {
-        const set = new Set(loadPref('openCats', []));
-        if (d.open) set.add(d.dataset.cat); else set.delete(d.dataset.cat);
-        savePref('openCats', [...set]);
+        const set = new Set(loadPref(openKey, []));
+        if (d.open) set.add(d.dataset.group); else set.delete(d.dataset.group);
+        savePref(openKey, [...set]);
       });
     });
   }
@@ -153,6 +186,15 @@ function renderSongView(slug) {
   const song = state.bySlug.get(slug);
   if (!song) {
     app.innerHTML = `<p class="empty">Canzone non trovata. <a href="#/">Torna alle canzoni</a></p>`;
+    return;
+  }
+  if (song.explicit && !state.explicitUnlocked) {
+    app.innerHTML = `<section class="page">
+      <a class="back" href="#/">‹ Canzoni</a>
+      <h1>Contenuto riservato</h1>
+      <p class="empty">Questa canzone è bloccata.<br>
+      Inserisci la password in <a href="#/settings">Impostazioni</a> per sbloccare i contenuti riservati.</p>
+    </section>`;
     return;
   }
   const parsed = parseSong(song.body);
@@ -319,6 +361,17 @@ function renderSettings() {
       </label>
       <p class="hint">Un pulsare luminoso a tempo (senza suono) sopra il testo di ogni canzone.</p>
     </div>
+    <div class="setting">
+      <h2>Contenuti riservati</h2>
+      ${state.explicitUnlocked
+        ? `<p class="hint">Contenuti riservati <strong>sbloccati</strong>.</p>
+           <button id="lock-btn" class="ctl">Blocca di nuovo</button>`
+        : `<div class="pass-row">
+             <input type="password" id="explicit-pass" class="pass-input" placeholder="Password" autocomplete="off" />
+             <button id="unlock-btn" class="ctl">Sblocca</button>
+           </div>
+           <p class="hint" id="explicit-status">Alcune canzoni sono nascoste finché non inserisci la password.</p>`}
+    </div>
   </section>`;
   app.querySelectorAll('input[name="theme"]').forEach((r) => {
     r.addEventListener('change', () => {
@@ -342,6 +395,31 @@ function renderSettings() {
     state.metronome = e.target.checked;
     savePref('metronome', state.metronome);
   });
+  const unlockBtn = document.getElementById('unlock-btn');
+  if (unlockBtn) {
+    const tryUnlock = () => {
+      const val = document.getElementById('explicit-pass').value;
+      if (val === EXPLICIT_PASSWORD) {
+        state.explicitUnlocked = true;
+        savePref('explicitUnlocked', true);
+        renderSettings();
+      } else {
+        document.getElementById('explicit-status').textContent = 'Password errata.';
+      }
+    };
+    unlockBtn.addEventListener('click', tryUnlock);
+    document.getElementById('explicit-pass').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') tryUnlock();
+    });
+  }
+  const lockBtn = document.getElementById('lock-btn');
+  if (lockBtn) {
+    lockBtn.addEventListener('click', () => {
+      state.explicitUnlocked = false;
+      savePref('explicitUnlocked', false);
+      renderSettings();
+    });
+  }
   window.scrollTo(0, 0);
 }
 

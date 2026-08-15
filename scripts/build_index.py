@@ -25,7 +25,7 @@ CATEGORY_KEYS = {"categories", "category", "tags"}
 
 
 def parse_meta(text):
-    meta = {"title": "", "subtitle": "", "key": "", "categories": []}
+    meta = {"title": "", "subtitle": "", "key": "", "categories": [], "explicit": False}
     for line in text.splitlines():
         m = DIRECTIVE_RE.match(line)
         if not m:
@@ -36,6 +36,8 @@ def parse_meta(text):
             meta[META_KEYS[name]] = value
         elif name in CATEGORY_KEYS:
             meta["categories"] = [c.strip() for c in value.split(",") if c.strip()]
+        elif name == "explicit":
+            meta["explicit"] = True
     return meta
 
 
@@ -60,6 +62,7 @@ def main():
             "subtitle": meta["subtitle"],
             "key": meta["key"],
             "categories": meta["categories"],
+            "explicit": meta["explicit"],
             "body": text,
         })
 
