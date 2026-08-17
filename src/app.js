@@ -1,4 +1,4 @@
-import { parseSong, renderSong, plainLyrics, songToText } from './chordpro.js';
+import { parseSong, renderSong, plainLyrics, songToText, escapeHtml } from './chordpro.js';
 import { mountTuner } from './tuner.js';
 
 // ---- Category display config -------------------------------------------------
@@ -40,7 +40,7 @@ const backdrop = document.getElementById('drawer-backdrop');
 // ---- Utils -------------------------------------------------------------------
 // Accent- and case-insensitive normalisation for search (gesù -> gesu).
 function normalize(s) {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 function loadPref(key, fallback) {
@@ -51,10 +51,6 @@ function loadPref(key, fallback) {
 }
 function savePref(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
-}
-
-function escapeHtml(s) {
-  return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
 const clampBpm = (v) => Math.max(30, Math.min(300, Math.round(Number(v) || 90)));
@@ -139,7 +135,7 @@ function renderHome(query = '') {
       if (b === NOART) return -1;
       return a.localeCompare(b, 'it');
     }
-    return categoryRank(a) - categoryRank(b) || a.localeCompare(b);
+    return categoryRank(a) - categoryRank(b) || a.localeCompare(b, 'it');
   });
 
   const openKey = `open:${state.groupBy}`;
@@ -197,7 +193,17 @@ function renderSongView(slug) {
     </section>`;
     return;
   }
-  const parsed = parseSong(song.body);
+  let parsed;
+  try {
+    parsed = parseSong(song.body);
+  } catch {
+    app.innerHTML = `<section class="page">
+      <a class="back" href="#/">‹ Canzoni</a>
+      <h1>${escapeHtml(song.title)}</h1>
+      <p class="empty">Impossibile leggere questa canzone.</p>
+    </section>`;
+    return;
+  }
   // Per-view transpose, reset on each open.
   let transpose = 0;
 
@@ -231,6 +237,9 @@ function renderSongView(slug) {
       nextBeat = performance.now();
       const tick = (now) => {
         if (!running) return;
+        // If we fell far behind (e.g. the tab was backgrounded and rAF paused),
+        // resync instead of flashing a burst of catch-up beats.
+        if (now - nextBeat > 1000) nextBeat = now;
         while (now >= nextBeat) {
           flash(beat);
           beat += 1;
@@ -522,23 +531,35 @@ function renderExport() {
   const outEl = app.querySelector('#ex-out');
   const statusEl = app.querySelector('#ex-status');
 
+  const isVisible = (s) => state.explicitUnlocked || !s.explicit;
+
   function buildOutput() {
     const chosen = state.songs
-      .filter((s) => selected.has(s.slug))
+      .filter((s) => selected.has(s.slug) && isVisible(s))
       .sort((a, b) => a.title.localeCompare(b.title, 'it'));
-    return chosen.map((s) => songToText(parseSong(s.body), { chords: withChords })).join('\n\n\n');
+    return chosen.map((s) => {
+      try {
+        return songToText(parseSong(s.body), { chords: withChords });
+      } catch {
+        return `${s.title.toUpperCase()}\n(impossibile leggere questo canto)`;
+      }
+    }).join('\n\n\n');
   }
 
   function updateOutput() {
     outEl.value = buildOutput();
-    countEl.textContent = `${selected.size} selezionat${selected.size === 1 ? 'a' : 'e'}`;
+    const n = [...selected].filter((slug) => {
+      const s = state.bySlug.get(slug);
+      return s && isVisible(s);
+    }).length;
+    countEl.textContent = `${n} selezionat${n === 1 ? 'a' : 'e'}`;
     statusEl.textContent = '';
   }
 
   function renderList() {
     const q = normalize(filter.trim());
     const list = state.songs
-      .filter((s) => !q || s.search.includes(q))
+      .filter((s) => (!q || s.search.includes(q)) && isVisible(s))
       .sort((a, b) => a.title.localeCompare(b.title, 'it'));
     if (list.length === 0) {
       listEl.innerHTML = `<p class="empty">Nessun canto trovato.</p>`;

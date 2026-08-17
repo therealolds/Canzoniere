@@ -35,16 +35,19 @@ function autoCorrelate(buf, sampleRate) {
 
   const b = buf.slice(r1, r2);
   SIZE = b.length;
-  const c = new Array(SIZE).fill(0);
-  for (let i = 0; i < SIZE; i++) {
+  // Only correlate lags down to a ~60 Hz floor — well below the lowest guitar
+  // string (E2 ≈ 82 Hz) — which bounds the otherwise O(n²) cost.
+  const maxLag = Math.min(SIZE - 1, Math.ceil(sampleRate / 60));
+  const c = new Array(maxLag + 1).fill(0);
+  for (let i = 0; i <= maxLag; i++) {
     for (let j = 0; j < SIZE - i; j++) c[i] += b[j] * b[j + i];
   }
 
   let d = 0;
-  while (c[d] > c[d + 1]) d++;
+  while (d < maxLag && c[d] > c[d + 1]) d++;
   let maxval = -1;
   let maxpos = -1;
-  for (let i = d; i < SIZE; i++) {
+  for (let i = d; i <= maxLag; i++) {
     if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
   }
   let T0 = maxpos;
