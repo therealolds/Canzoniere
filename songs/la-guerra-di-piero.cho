@@ -2,10 +2,12 @@
 {subtitle: F. De Andrè}
 {categories: italiane}
 
+{start_of_chorus}
 [LAm]Dormi sep[MI]olto in un campo di g[LAm]rano,
 non è la [REm]rosa, no[SOL]n è il tu[DO]lipano
 che ti fan ve[MI]glia dall'ombra dei [LAm]fossi
 ma sono [REm]mille pap[MI]averi [LAm]rossi.
+{end_of_chorus}
 
 "Lungo le sp[MI]onde del mio to[LAm]rrente
 voglio che s[REm]cendano i lucci argent[LAm]ati,
@@ -18,15 +20,15 @@ te ne vai [SOL]triste [7]come chi [DO]deve,
 ed il vento ti sp[MI]uta in faccia [LAm]la neve.
 _________
 
-Fermati Piero, fermati adesso,
-lascia che il vento ti passi un po' addosso,
-dei morti in battaglia ti porti la voce,
-chi diede la vita ebbe in cambio una croce.
+[LAm]Fermati [MI]Piero, fermati [LAm]adesso,
+lascia che [REm]il vento ti [SOL]passi un po' [DO]addosso,
+dei morti in [MI]battaglia ti porti la [LAm]voce,
+chi diede la [REm]vita ebbe in [MI]cambio [LAm]una croce.
 
-Ma tu non lo udisti ed il tempo passava
-con le stagioni a passo di "java"
-ed arrivasti a passar la frontiera
-in un bel giorno di Primavera.
+[LAm]Ma tu non [MI]lo udisti ed il tempo [LAm]passava
+con le [REm]stagioni a [SOL]passo di [DO]"java"
+ed arrivasti [MI]a passar la [LAm]frontiera
+in un [REm]bel giorno [MI]di [LAm]Primavera.
 
 E mentre marciavi con l'anima in spalle
 vedesti un uomo in fondo alla valle
@@ -34,15 +36,15 @@ che aveva il tuo stesso identico umore
 ma la divisa di un altro colore.
 _________
 
-Sparagli Piero, sparagli ora
-e dopo un colpo sparagli ancora,
-fino a che tu non lo vedrai esangue
-cadere in terra a coprire il suo sangue.
+[LAm]Sparagli [MI]Piero, sparagli [LAm]ora
+e dopo un [REm]colpo [SOL]sparagli [DO]ancora,
+fino a che [MI]tu non lo vedrai [LAm]esangue
+cadere in [REm]terra a coprire [MI]il suo [LAm]sangue.
 
-"E se gli sparo in fronte o nel cuore
-soltanto il tempo avrà per morire,
-ma il tempo a me resterà per vedere,
-vedere gli occhi d'un uomo che muore".
+[LAm]"E se gli [MI]sparo in fronte o nel [LAm]cuore
+soltanto [REm]il tempo [SOL]avrà per [DO]morire,
+ma il tempo [MI]a me resterà per [LAm]vedere,
+vedere gli [REm]occhi d'un [MI]uomo che [LAm]muore".
 
 E mentre gli usi questa premura
 quello si volta, ti vede, ha paura
@@ -50,15 +52,15 @@ ed imbracciata l'artiglieria
 non ti ricambia la cortesia.
 _________
 
-Cadesti a terra, senza un lamento
-e ti accorgesti in un solo momento
-che il tempo non ti sarebbe bastato
-a chieder perdono per ogni peccato.
+[LAm]Cadesti [MI]a terra, senza un [LAm]lamento
+e ti [REm]accorgesti in [SOL]un solo [DO]momento
+che il tempo [MI]non ti sarebbe [LAm]bastato
+a chieder [REm]perdono per [MI]ogni [LAm]peccato.
 
-Cadesti a terra, senza un lamento
-e ti accorgesti in un solo momento
-che la tua vita finiva quel giorno
-e non ci sarebbe stato ritorno.
+[LAm]Cadesti [MI]a terra, senza un [LAm]lamento
+e ti [REm]accorgesti in [SOL]un solo [DO]momento
+che la tua [MI]vita finiva quel [LAm]giorno
+e non ci [REm]sarebbe [MI]stato [LAm]ritorno.
 
 "Ninetta mia, crepare di Maggio
 ci vuole tanto, troppo coraggio.
@@ -72,7 +74,4 @@ dentro la bocca stringevi parole
 troppo gelate per sciogliersi al sole.
 _________
 
-Dormi sepolto in un campo di grano,
-non è la rosa, non è il tulipano
-che ti fan veglia dall'ombra dei fossi
-ma sono mille papaveri rossi.
+{chorus}
