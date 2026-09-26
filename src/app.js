@@ -1,4 +1,4 @@
-import { parseSong, renderSong, plainLyrics, songToText, escapeHtml } from './chordpro.js';
+import { parseSong, renderSong, plainLyrics, songToText, escapeHtml, transposeChord } from './chordpro.js';
 import { mountTuner } from './tuner.js';
 
 // ---- Category display config -------------------------------------------------
@@ -39,8 +39,10 @@ const backdrop = document.getElementById('drawer-backdrop');
 
 // ---- Utils -------------------------------------------------------------------
 // Accent- and case-insensitive normalisation for search (gesù -> gesu).
+// Typographic apostrophes fold into ', so "l’amore" (as iPhones type it)
+// and "l'amore" find the same songs.
 function normalize(s) {
-  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’‘ʼ´`]/g, "'").toLowerCase();
 }
 
 function loadPref(key, fallback) {
@@ -272,11 +274,33 @@ function renderSongView(slug) {
     if (running) startLoop();
   }
 
+  // Redraws (chords toggle, transpose) keep the reader's place: remember the
+  // line at the top of the reading area, just under the sticky controls, and
+  // put it back at the same height afterwards.
+  let drawn = false;
+  function readingAnchor() {
+    const top = app.querySelector('.song-controls').getBoundingClientRect().bottom;
+    for (const el of app.querySelectorAll('.song-body [data-i]')) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom > top) return { i: Number(el.dataset.i), y: r.top };
+    }
+    return null;
+  }
+  function restoreAnchor({ i, y }) {
+    // Same block, or the next one drawn (chord-only lines vanish without chords).
+    const el = [...app.querySelectorAll('.song-body [data-i]')].find((e) => Number(e.dataset.i) >= i);
+    if (el) window.scrollBy(0, el.getBoundingClientRect().top - y);
+  }
+
   function draw() {
     stopLoop();
-    const keyLabel = parsed.meta.key
-      ? `<span class="song-key">Tono: ${escapeHtml(parsed.meta.key)}${transpose ? ` (${transpose > 0 ? '+' : ''}${transpose})` : ''}</span>`
-      : '';
+    const anchor = drawn ? readingAnchor() : null;
+    const offset = transpose ? `${transpose > 0 ? '+' : '−'}${Math.abs(transpose)}` : '';
+    const keyText = parsed.meta.key
+      ? `Tono: ${escapeHtml(transposeChord(parsed.meta.key, transpose))}${offset ? ` (${offset})` : ''}`
+      : offset || 'Trasporta';
+    const keyTitle = offset ? `Trasposto di ${offset} semiton${Math.abs(transpose) === 1 ? 'o' : 'i'}` : 'Tono originale';
+    const keyLabel = `<span class="song-key${offset ? ' shifted' : ''}" title="${keyTitle}">${keyText}</span>`;
     const metroBar = metroOn ? `
         <div class="metronome">
           <button id="m-toggle" class="ctl">${running ? 'Ferma' : 'Avvia'}</button>
@@ -301,7 +325,7 @@ function renderSongView(slug) {
           </button>
           <div class="transpose ${state.showChords ? '' : 'disabled'}">
             <button id="tr-down" class="ctl" title="Abbassa">−</button>
-            ${keyLabel || '<span class="song-key">Trasporta</span>'}
+            ${keyLabel}
             <button id="tr-up" class="ctl" title="Alza">+</button>
             <button id="tr-reset" class="ctl" title="Ripristina">↺</button>
           </div>
@@ -315,11 +339,15 @@ function renderSongView(slug) {
       savePref('showChords', state.showChords);
       draw();
     };
-    document.getElementById('tr-down').onclick = () => { transpose -= 1; draw(); };
-    document.getElementById('tr-up').onclick = () => { transpose += 1; draw(); };
+    // Twelve semitones is the same set of chords, so wrap back to the original.
+    const shift = (d) => { transpose = (transpose + d) % 12; draw(); };
+    document.getElementById('tr-down').onclick = () => shift(-1);
+    document.getElementById('tr-up').onclick = () => shift(1);
     document.getElementById('tr-reset').onclick = () => { transpose = 0; draw(); };
     if (metroOn) bindMetro();
-    window.scrollTo(0, 0);
+    if (anchor) restoreAnchor(anchor);
+    else if (!drawn) window.scrollTo(0, 0);
+    drawn = true;
   }
   draw();
 }
@@ -621,8 +649,16 @@ function renderExport() {
 // when navigating away.
 let pageCleanup = null;
 
+// Where the song list was scrolled (and for which search) when we left it,
+// so coming back from a song lands on the same spot instead of wherever the
+// song page happened to be scrolled.
+let listSpot = null;
+let onList = false;
+
 function router() {
   if (pageCleanup) { pageCleanup(); pageCleanup = null; }
+  if (onList) listSpot = { y: window.scrollY, query: searchInput.value };
+  onList = false;
 
   const hash = location.hash || '#/';
   const songMatch = hash.match(/^#\/song\/(.+)$/);
@@ -632,7 +668,12 @@ function router() {
   else if (hash === '#/tuner') renderTuner();
   else if (hash === '#/export') renderExport();
   else if (hash === '#/info') renderInfo();
-  else renderHome(searchInput.value);
+  else {
+    renderHome(searchInput.value);
+    // A different search is a different list: start that one at the top.
+    window.scrollTo(0, listSpot && listSpot.query === searchInput.value ? listSpot.y : 0);
+    onList = true;
+  }
 }
 
 // ---- Init --------------------------------------------------------------------
@@ -678,6 +719,9 @@ async function init() {
     if (loadPref('theme', 'auto') === 'auto') applyTheme('auto');
   });
 
+  // The router decides where each page starts (see listSpot); don't let the
+  // browser restore an old scroll position first on Back/Forward.
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   window.addEventListener('hashchange', router);
   router();
 

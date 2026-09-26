@@ -166,30 +166,78 @@ export function escapeHtml(s) {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// Chords-on markup for one lyric line. Each chord and the text under it form
+// a .c box (chord stacked on top); the pieces of one word are kept together
+// in a .w, so the line wraps between words like normal text, never inside one.
+// A box takes in the following words of its segment until the text is about
+// as wide as the chord, so a short word ("Al", "e") isn't padded out to the
+// chord's width.
+function chordLineHtml(segments, steps) {
+  const out = [];
+  let word = '';
+  let chorded = false;
+  const endWord = () => {
+    out.push(chorded ? `<span class="w">${word}</span>` : word);
+    word = '';
+    chorded = false;
+  };
+  for (const seg of segments) {
+    const parts = seg.text.split(/(\s+)/); // even indexes: text, odd: spaces
+    let k = 0;
+    if (seg.chord) {
+      const chord = transposeChord(seg.chord, steps);
+      let under = parts[0];
+      if (under === '' && parts.length > 1) {
+        // Chord placed on a space: it sits over the space and the next word.
+        endWord();
+        under = parts[1] + parts[2];
+        k = 2;
+      }
+      while (under.length < chord.length + 2 && k + 2 < parts.length) {
+        under += parts[k + 1] + parts[k + 2];
+        k += 2;
+      }
+      word += `<span class="c"><span class="chord">${escapeHtml(chord)}</span><span class="t">${escapeHtml(under)}</span></span>`;
+      chorded = true;
+      if (/\s$/.test(under)) endWord();
+      k += 1;
+    }
+    for (; k < parts.length; k++) {
+      if (k % 2) { endWord(); out.push(parts[k]); } else word += escapeHtml(parts[k]);
+    }
+  }
+  endWord();
+  return out.join('');
+}
+
 // Render parsed song to HTML. options: { transpose:int, showChords:bool }
+// Blocks carry data-i (their index in parsed.blocks) so the view can keep the
+// reader's place when it re-renders.
 export function renderSong(parsed, options = {}) {
   const steps = options.transpose || 0;
+  const showChords = options.showChords !== false;
   const html = [];
-  for (const block of parsed.blocks) {
-    if (block.type === 'break') { html.push('<div class="stanza-break"></div>'); continue; }
+  let pendingBreak = false;
+  parsed.blocks.forEach((block, i) => {
+    if (block.type === 'break') { pendingBreak = html.length > 0; return; }
+    let out;
     if (block.type === 'comment') {
-      html.push(`<div class="song-comment">${escapeHtml(block.text)}</div>`);
-      continue;
+      out = `<div class="song-comment" data-i="${i}">${escapeHtml(block.text)}</div>`;
+    } else if (block.type === 'chorus_label') {
+      out = `<div class="chorus-label" data-i="${i}">${escapeHtml(block.text)}</div>`;
+    } else {
+      // Without chords a line is plain text; chord-only lines have nothing to sing.
+      const body = showChords
+        ? chordLineHtml(block.segments, steps)
+        : escapeHtml(block.segments.map((s) => s.text).join(''));
+      if (!body.trim()) return;
+      let cls = block.chorus ? 'song-line chorus' : 'song-line';
+      if (block.recalled) cls += ' recalled';
+      out = `<div class="${cls}" data-i="${i}">${body}</div>`;
     }
-    if (block.type === 'chorus_label') {
-      html.push(`<div class="chorus-label">${escapeHtml(block.text)}</div>`);
-      continue;
-    }
-    let cls = block.chorus ? 'song-line chorus' : 'song-line';
-    if (block.recalled) cls += ' recalled';
-    const parts = block.segments.map((seg) => {
-      const chord = seg.chord ? transposeChord(seg.chord, steps) : '';
-      const chordHtml = chord ? `<span class="chord">${escapeHtml(chord)}</span>` : '<span class="chord"></span>';
-      const text = escapeHtml(seg.text).replace(/ /g, '&nbsp;');
-      return `<span class="seg"><span class="chord-slot">${chordHtml}</span><span class="lyric">${text || '&nbsp;'}</span></span>`;
-    }).join('');
-    html.push(`<div class="${cls}">${parts}</div>`);
-  }
+    if (pendingBreak) { html.push('<div class="stanza-break"></div>'); pendingBreak = false; }
+    html.push(out);
+  });
   return html.join('\n');
 }
 
