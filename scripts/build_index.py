@@ -23,6 +23,45 @@ META_KEYS = {
 }
 CATEGORY_KEYS = {"categories", "category", "tags"}
 
+# What the site draws as a chord (mirrors looksLikeChord() in src/chordpro.js)...
+SITE_CHORD_RE = re.compile(r"^(?:SOL|DO|RE|MI|FA|LA|SI)(?:#|b)?")
+# ...and what a well-formed one looks like: LAm, FA#m7, DO7+, SIb, RE/FA#, LA4/7.
+NOTE = r"(?:SOL|DO|RE|MI|FA|LA|SI)(?:#|b)?"
+CHORD_RE = re.compile(
+    rf"^{NOTE}(?:maj|min|dim|aug|sus|add|m|M|\d|\+|-|°|[#b]\d|\([#b]?\d+\))*(?:/(?:{NOTE}|\d+))?$"
+)
+# A chord the site won't recognise: wrong case (La, sol7) or English names (E, Am).
+LOOSE_CHORD_RE = re.compile(
+    r"^(?:do|re|mi|fa|sol|la|si|[a-g])(?:#|b)?(?:m|maj|dim|sus|add|\d|\+)*$", re.I
+)
+# Bracketed marks that are meant to be printed as they are.
+MARKS = {"*", "§", "𝄋"}
+
+
+def lint_brackets(text):
+    """Yield (line number, message) for [...] the site would draw wrongly:
+    chord fragments printed in the lyrics, or chords that aren't valid.
+    Bracketed words ([x2], [solo], [fine]) are taken as deliberate notes."""
+    for n, line in enumerate(text.splitlines(), 1):
+        if DIRECTIVE_RE.match(line):
+            continue
+        if line.count("[") != line.count("]"):
+            yield n, "unbalanced [ ]"
+        as_text, malformed = [], []
+        for tok in re.findall(r"\[([^\]]*)\]", line):
+            if tok in MARKS:
+                continue
+            if SITE_CHORD_RE.match(tok) and not re.search(r"\s", tok):
+                if not CHORD_RE.match(tok):
+                    malformed.append(f"[{tok}]")
+            elif (SITE_CHORD_RE.match(tok) or "[" in tok or len(tok) < 2
+                  or not re.search(r"[^\W\d_]", tok) or LOOSE_CHORD_RE.match(tok)):
+                as_text.append(f"[{tok}]")
+        if as_text:
+            yield n, f"{' '.join(as_text)} printed in the lyrics as text (broken chord?)"
+        if malformed:
+            yield n, f"{' '.join(malformed)} drawn as a chord, but not a valid one"
+
 
 def parse_meta(text):
     meta = {"title": "", "subtitle": "", "key": "", "categories": [], "explicit": False}
@@ -56,6 +95,8 @@ def main():
             meta["title"] = slug
         if not meta["categories"]:
             warnings.append(f"  {path.name}: missing {{categories}}")
+        for n, msg in lint_brackets(text):
+            warnings.append(f"  {path.name}:{n}: {msg}")
         songs.append({
             "slug": slug,
             "title": meta["title"],

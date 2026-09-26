@@ -575,6 +575,7 @@ h1, h2 {
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
+.song-key.shifted { color: var(--accent-ink); font-weight: 700; }
 
 /* ---- Metronome ---- */
 .metronome {
@@ -616,28 +617,35 @@ h1, h2 {
   font-size: 1.05rem;
   padding-bottom: 40vh;
 }
+/* A lyric line wraps between words like normal text; wrapped continuations
+   are indented so they still read as one line. */
 .song-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
   margin: 0 0 .15rem;
+  padding-left: 1em;
+  text-indent: -1em;
+  overflow-wrap: break-word;
 }
 .song-line.chorus {
   border-left: 3px solid var(--accent);
-  padding-left: .6rem;
+  padding-left: calc(.6rem + 1em);
   background: var(--chorus);
 }
 .song-line.recalled { border-left-style: dashed; }
-.seg { display: inline-flex; flex-direction: column; }
-.chord-slot { height: 1.25em; }
+/* Chords on: .c stacks a chord on the text it's played over; .w keeps the
+   pieces of one word on the same row. */
+.w { white-space: nowrap; }
+.c { display: inline-block; text-indent: 0; }
+.c > .chord, .c > .t { display: block; }
+.c > .t { white-space: pre; }
+.c > .t:empty::before { content: "\200b"; } /* keeps chord-only boxes on the text baseline */
 .chord {
   color: var(--chord);
   font-weight: 700;
   font-size: .8em;
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   white-space: nowrap;
+  padding-right: .5em; /* gap before the next chord when the syllable is shorter */
 }
-.lyric { white-space: pre-wrap; }
 
 .song-comment { font-style: italic; color: var(--muted); margin: .4rem 0; }
 .chorus-label {
@@ -650,8 +658,6 @@ h1, h2 {
   margin: .6rem 0 .1rem;
 }
 .stanza-break { height: .9rem; }
-
-.song.hide-chords .chord-slot { display: none; }
 
 @media (max-width: 480px) {
   .brand { font-size: 1rem; letter-spacing: .08em; }

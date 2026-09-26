@@ -24,6 +24,8 @@ Poi apri <http://localhost:8123> nel browser.
    ```sh
    py scripts/build_index.py
    ```
+   Se stampa degli avvisi, controllali: segnalano per esempio accordi rotti come
+   `[7]` o `[La]`, che il sito stamperebbe come testo in mezzo alle parole.
 4. Ricarica il sito. Fatto. (Per pubblicare: commit + push.)
 
 ## Formato ChordPro (Italiano)
