@@ -24,6 +24,8 @@ Poi apri <http://localhost:8123> nel browser.
    ```sh
    py scripts/build_index.py
    ```
+   Se stampa degli avvisi, controllali: segnalano per esempio accordi rotti come
+   `[7]` o `[La]`, che il sito stamperebbe come testo in mezzo alle parole.
 4. Ricarica il sito. Fatto. (Per pubblicare: commit + push.)
 
 ## Formato ChordPro (Italiano)
@@ -44,10 +46,17 @@ Accordi in notazione italiana: `DO RE MI FA SOL LA SI`, con `#`/`b` e suffissi
 Righe del ritornello (evidenziate)
 {end_of_chorus}
 
-{comment: Rit.}                  # etichetta/annotazione
+{comment: Rit.}                  # ripete qui il ritornello, con gli accordi
+{comment: Nota}                  # qualsiasi altra annotazione
 ```
 
 Una riga vuota separa le strofe.
+
+Il ritornello si scrive una volta sola, fra `{start_of_chorus}` e
+`{end_of_chorus}`. Dove va ripetuto basta `{comment: Rit.}` (vanno bene anche
+`Rit. x2`, `Ritornello`, `{chorus}`): il sito lo ristampa per intero, così non
+serve tornare su. Se un canto ha un «Rit.» ma nessun ritornello marcato,
+`build_index.py` lo segnala.
 
 ## Struttura del progetto
 

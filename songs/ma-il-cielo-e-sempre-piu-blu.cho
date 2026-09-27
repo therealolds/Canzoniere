@@ -2,7 +2,6 @@
 {subtitle: Rino Gaetano}
 {categories: italiane}
 
-Gaetano
 [DO]Chi vive in [LAm]baracca, [DO]chi suda il sala[LAm]rio
 [DO]Chi ama l'amore e i [LAm]sogni di gloria
 [DO]Chi ruba pe[SOL]nsioni, chi ha scarsa [FA]memoria
@@ -15,8 +14,10 @@ Gaetano
 [DO]Chi trova sc[LAm]ontato, chi come ha t[DO]rovato
 Na na na n[LAm]a na na na na na [FA]na
 
+{start_of_chorus}
 [FA]Ma il cielo è [SOL]sempre più [DO]blu [LAm]uh uh, [FA]uh uh
 Ma il cielo [SOL]è sempre più [DO]blu [LAm]uh uh, [FA]uh [SOL]uh…
+{end_of_chorus}
 
 [DO]Chi sogna [LAm]i milioni, c[DO]hi gioca d'azzardo[LAm]
 [DO]Chi gioca coi [SOL]fili chi ha fatto l'in[FA]diano
@@ -44,7 +45,7 @@ Na na na n[LAm]a na na na na na [FA]na
 [DO]Chi grida "al ladro!", [LAm]chi ha l'antifurto
 [DO]Chi ha fatto un bel quadro, [LAm]chi scrive sui muri
 [DO]Chi reagisce d'istinto, [LAm]chi ha perso, chi ha
-vinto
+[FA]vinto
 [DO]Chi mangia una volta, [LAm]chi vuole l'aumento
 [DO]Chi cambia la barca, [LAm]felice e contento
 [DO]Chi come ha trovato, [LAm]chi tutto sommato
@@ -60,4 +61,4 @@ vinto
 [DO]Chi mangia patate, [LAm]chi beve un bicchiere
 [DO]Chi solo ogni tanto, [LAm]chi tutte le sere
 Na na na n[LAm]a na na na na na [FA]na
-(Ma il cielo è sempre più blu)
+([FA]Ma il cielo è [SOL]sempre più [DO]blu)
