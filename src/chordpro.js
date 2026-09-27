@@ -66,7 +66,20 @@ export function parseSong(source) {
 
   const lines = source.replace(/\r\n?/g, '\n').split('\n');
 
-  for (const raw of lines) {
+  // A chorus may be recalled before it is written out: collect them all first.
+  const allChoruses = collectChoruses(lines);
+  const firstChorusKey = Object.keys(allChoruses)[0] || null;
+  const recall = (key, label) => {
+    const k = key || lastChorusKey || firstChorusKey;
+    const stored = choruses[k] || allChoruses[k];
+    flushBreak();
+    if (!stored || !stored.length) return false;
+    blocks.push({ type: 'chorus_label', text: label });
+    for (const segs of stored) blocks.push({ type: 'line', chorus: true, recalled: true, segments: segs });
+    return true;
+  };
+
+  for (const [n, raw] of lines.entries()) {
     const line = raw.replace(/\s+$/g, '');
 
     if (line.trim() === '') {
@@ -100,22 +113,14 @@ export function parseSong(source) {
             currentChorus = null;
           }
           break;
-        case 'chorus': {
-          // Reprint a previously defined chorus, with chords.
-          const key = value || lastChorusKey || '__default__';
-          const stored = choruses[key];
-          flushBreak();
-          if (stored && stored.length) {
-            blocks.push({ type: 'chorus_label', text: 'Rit.' });
-            for (const segs of stored) {
-              blocks.push({ type: 'line', chorus: true, recalled: true, segments: segs });
-            }
-          } else {
-            blocks.push({ type: 'comment', text: 'Rit.' });
-          }
+        case 'chorus':
+          // Reprint a chorus, with chords.
+          if (!recall(value, 'Rit.')) blocks.push({ type: 'comment', text: 'Rit.' });
           break;
-        }
         case 'comment': case 'c':
+          // "Rit.", "Rit. x2", "Ritornello"… also reprint the chorus, unless the
+          // comment is just the heading of the chorus written right below it.
+          if (RIT_RE.test(value) && !startsChorus(lines, n + 1) && recall('', value)) break;
           flushBreak();
           blocks.push({ type: 'comment', text: value });
           break;
@@ -131,6 +136,42 @@ export function parseSong(source) {
   }
 
   return { meta, blocks };
+}
+
+// A comment that means "sing the chorus here": Rit., Rit. x2, Ritornello, Rit. (x3)…
+const RIT_RE = /^\(?\s*rit(?:ornello)?\b\.?\s*(?:x\s*\d+|\(\s*x\s*\d+\s*\)|\([^)]*\))?\s*\)?\s*:?\s*$/i;
+const DIRECTIVE_RE = /^\{\s*([^:}]+?)\s*(?::\s*(.*?)\s*)?\}$/;
+
+// Is the next non-blank line (from index n) a {start_of_chorus}?
+function startsChorus(lines, n) {
+  for (; n < lines.length; n++) {
+    const t = lines[n].trim();
+    if (!t) continue;
+    const d = t.match(DIRECTIVE_RE);
+    return !!d && ['start_of_chorus', 'soc'].includes(d[1].toLowerCase());
+  }
+  return false;
+}
+
+// label -> segment-lists of every chorus in the song (first definition wins).
+function collectChoruses(lines) {
+  const found = {};
+  let cur = null;
+  for (const raw of lines) {
+    const t = raw.trim();
+    const d = t.match(DIRECTIVE_RE);
+    if (d) {
+      const name = d[1].toLowerCase();
+      if (name === 'start_of_chorus' || name === 'soc') cur = { key: d[2] || '__default__', lines: [] };
+      else if ((name === 'end_of_chorus' || name === 'eoc') && cur) {
+        if (!(cur.key in found)) found[cur.key] = cur.lines;
+        cur = null;
+      }
+      continue;
+    }
+    if (cur && t) cur.lines.push(parseLine(t));
+  }
+  return found;
 }
 
 // Split a lyric line into { chord, text } segments at each [chord] marker.
