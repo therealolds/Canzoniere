@@ -1,0 +1,9 @@
+# Incolla qui sotto le canzoni da aggiungere, poi lancia:
+#     py scripts/add_songs.py            (su Linux: python3 scripts/add_songs.py)
+#     py scripts/add_songs.py --dry-run  (solo anteprima, non scrive niente)
+#
+# Ogni canzone inizia con una riga così (l'autore si può lasciare vuoto):
+#     === Titolo | Autore | categoria
+# categoria: preghiera, italiane, internazionali o scout (più di una: separate da virgola)
+# Sotto, il testo con gli accordi SOPRA le parole, come lo copi dai siti di accordi.
+# Le righe che iniziano con # vengono ignorate.

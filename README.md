@@ -18,6 +18,14 @@ Poi apri <http://localhost:8123> nel browser.
 
 ## Aggiungere o modificare una canzone
 
+**Il modo veloce:** incolla in `tbd.txt` il testo con gli accordi sopra le parole
+(come lo copi dai siti di accordi, italiani o inglesi), preceduto dalla riga
+`=== Titolo | Autore | categoria`, poi lancia `py scripts/add_songs.py`.
+Crea i `.cho`, svuota `tbd.txt` e rigenera l'indice; con `--dry-run` mostra
+solo l'anteprima. Le istruzioni sono in cima a `tbd.txt`.
+
+**A mano:**
+
 1. Crea un file in `songs/`, es. `songs/nome-canzone.cho` (nome file = slug URL).
 2. Scrivi la canzone in formato **ChordPro** (vedi sotto).
 3. Rigenera l'indice:
@@ -69,6 +77,7 @@ src/
 songs/                una canzone per file .cho  ← QUI si aggiungono i canti
 songs.json            indice generato (NON modificare a mano)
 scripts/
+  add_songs.py        aggiunge le canzoni incollate in tbd.txt
   build_index.py      genera songs.json dai file in songs/
   make_icons.py       (ri)genera le icone dell'app
 manifest.webmanifest  configurazione PWA (installabile / offline)

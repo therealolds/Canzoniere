@@ -29,7 +29,13 @@ const state = {
   metronome: loadPref('metronome', false),
   explicitUnlocked: loadPref('explicitUnlocked', false),
   groupBy: loadPref('groupBy', 'category'),
+  scrollSpeed: Math.min(5, Math.max(1, Math.round(Number(loadPref('scrollSpeed', 2))) || 2)),
 };
+
+// Auto-scroll speeds 1..5, in pixels per second.
+const SCROLL_SPEEDS = [8, 14, 22, 32, 45];
+const PLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg>';
+const PAUSE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>';
 
 const app = document.getElementById('app');
 const searchInput = document.getElementById('search');
@@ -219,8 +225,58 @@ function renderSongView(slug) {
   let metroRAF = null;
   const stopLoop = () => { if (metroRAF) { cancelAnimationFrame(metroRAF); metroRAF = null; } };
 
-  // Release the animation loop when leaving the page.
-  pageCleanup = () => { running = false; stopLoop(); };
+  // Auto-scroll: glides the page down at the chosen speed, keeping the screen
+  // awake. Scrolling by hand meanwhile just moves where it carries on from.
+  let scrolling = false;
+  let scrollRAF = null;
+  let wakeLock = null;
+  let showScroll = () => {};
+  const stopScroll = () => {
+    scrolling = false;
+    if (scrollRAF) { cancelAnimationFrame(scrollRAF); scrollRAF = null; }
+    if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+  };
+  async function keepAwake() {
+    if (!('wakeLock' in navigator) || wakeLock) return;
+    try {
+      const lock = await navigator.wakeLock.request('screen');
+      if (!scrolling) { lock.release().catch(() => {}); return; }
+      wakeLock = lock;
+      lock.addEventListener('release', () => { if (wakeLock === lock) wakeLock = null; });
+    } catch { /* not allowed: the screen may dim as usual */ }
+  }
+  // The browser drops the wake lock when the tab is hidden; take it back.
+  const onVisible = () => { if (scrolling && document.visibilityState === 'visible') keepAwake(); };
+  document.addEventListener('visibilitychange', onVisible);
+  function startScroll() {
+    scrolling = true;
+    keepAwake();
+    let pos = window.scrollY;
+    let last = performance.now();
+    const step = (now) => {
+      if (!scrolling) return;
+      const dt = Math.min(now - last, 100); // no jump after the tab was in the background
+      last = now;
+      if (Math.abs(window.scrollY - pos) > 2) pos = window.scrollY;
+      pos += SCROLL_SPEEDS[state.scrollSpeed - 1] * dt / 1000;
+      window.scrollTo(0, pos);
+      if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1) {
+        stopScroll();
+        showScroll();
+        return;
+      }
+      scrollRAF = requestAnimationFrame(step);
+    };
+    scrollRAF = requestAnimationFrame(step);
+  }
+
+  // Release the animation loops (and the wake lock) when leaving the page.
+  pageCleanup = () => {
+    running = false;
+    stopLoop();
+    stopScroll();
+    document.removeEventListener('visibilitychange', onVisible);
+  };
 
   function bindMetro() {
     const toggleBtn = document.getElementById('m-toggle');
@@ -272,6 +328,31 @@ function renderSongView(slug) {
     };
 
     if (running) startLoop();
+  }
+
+  function bindScroll() {
+    const toggle = document.getElementById('as-toggle');
+    const speeds = app.querySelectorAll('.as-speed');
+    showScroll = () => {
+      toggle.innerHTML = scrolling ? PAUSE_ICON : PLAY_ICON;
+      toggle.setAttribute('aria-pressed', String(scrolling));
+      toggle.setAttribute('aria-label', scrolling ? 'Ferma lo scorrimento' : 'Scorrimento automatico');
+      speeds.forEach((b) => b.classList.toggle('active', Number(b.dataset.speed) === state.scrollSpeed));
+    };
+    toggle.onclick = () => {
+      if (scrolling) stopScroll(); else startScroll();
+      showScroll();
+    };
+    // Picking a speed also starts the scroll.
+    speeds.forEach((b) => {
+      b.onclick = () => {
+        state.scrollSpeed = Number(b.dataset.speed);
+        savePref('scrollSpeed', state.scrollSpeed);
+        if (!scrolling) startScroll();
+        showScroll();
+      };
+    });
+    showScroll();
   }
 
   // Redraws (chords toggle, transpose) keep the reader's place: remember the
@@ -332,6 +413,10 @@ function renderSongView(slug) {
         </div>
         ${metroBar}
         <div class="song-body">${renderSong(parsed, { transpose, showChords: state.showChords })}</div>
+        <div class="autoscroll" role="group" aria-label="Scorrimento automatico">
+          <button id="as-toggle" class="as-play"></button>
+          ${[1, 2, 3, 4, 5].map((n) => `<button class="as-speed" data-speed="${n}" aria-label="Velocità ${n}">${n}</button>`).join('')}
+        </div>
       </article>`;
 
     document.getElementById('toggle-chords').onclick = () => {
@@ -345,6 +430,7 @@ function renderSongView(slug) {
     document.getElementById('tr-up').onclick = () => shift(1);
     document.getElementById('tr-reset').onclick = () => { transpose = 0; draw(); };
     if (metroOn) bindMetro();
+    bindScroll();
     if (anchor) restoreAnchor(anchor);
     else if (!drawn) window.scrollTo(0, 0);
     drawn = true;
